@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  zookeeper:
+      image: "confluentinc/cp-zookeeper"
+      profiles: ["local", "end_to_end"]
+      ports:
+        - 32181:32181
+      environment:
+        - ZOOKEEPER_CLIENT_PORT=32181
+        
+  kafka:
+      image: confluentinc/cp-kafka
+      ports:
+        - 9092:9092
+        - 29092:29092
+      profiles: ["local", "end_to_end"]
+      healthcheck:
+        test: nc -z localhost 9092 || exit -1
+        start_period: 15s
+        interval: 5s
+        timeout: 10s
+        retries: 10
+      depends_on:
+        - zookeeper
+      environment:
+        - KAFKA_ZOOKEEPER_CONNECT=zookeeper:32181
+        - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+        - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+        - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT_HOST://localhost:29092,PLAINTEXT://kafka:9092
+        - KAFKA_BROKER_ID=1
+    
