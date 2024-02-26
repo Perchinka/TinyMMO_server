@@ -1,40 +1,38 @@
-from src import Config
-from confluent_kafka import Producer, Consumer, KafkaError
+from src.config import Config
+from confluent_kafka import Producer, Consumer
+from pydantic import BaseModel
+from datetime import datetime
+import socket
+
+class ChatMsg(BaseModel):
+    content: str
+    reciever: str
+    timestamp: str
+
 
 class KafkaAdapter:
-    def __init__(self):
+    def __init__(self, config: Config):
         self.producer = Producer({
-            'bootstrap.servers': Config.KAFKA_URL,
-            'sasl.mechanisms': 'PLAIN',
-            'security.protocol': 'SASL_SSL',
-            'sasl.username': Config.KAFKA_USERNAME,
-            'sasl.password': Config.KAFKA_PASSWORD
+            'bootstrap.servers': config.KAFKA_URL,
+            'client.id': socket.gethostname()
         })
         self.consumer = Consumer({
-            'bootstrap.servers': Config.KAFKA_URL,
-            'sasl.mechanisms': 'PLAIN',
-            'security.protocol': 'SASL_SSL',
-            'sasl.username': Config.KAFKA_USERNAME,
-            'sasl.password': Config.KAFKA_PASSWORD,
+            'bootstrap.servers': config.KAFKA_URL,
             'group.id': 'chat_service',
-            'auto.offset.reset': 'earliest'
         })
     
-    def produce(self, topic, message):
-        self.producer.produce(topic, message)
-        self.producer.flush()
+    def publish_msg(self, msg: ChatMsg):
+        self.producer.produce('snd', key=msg.reciever, value=msg.content)
     
-    def consume(self, topic):
-        self.consumer.subscribe([topic])
-        while True:
-            msg = self.consumer.poll(1.0)
-            if msg is None:
-                continue
-            if msg.error():
-                if msg.error().code() == KafkaError._PARTITION_EOF:
-                    continue
-                else:
-                    print(msg.error())
-                    break
-            print('Received message: {}'.format(msg.value().decode('utf-8')))
-        self.consumer.close()
+
+    
+    
+def main():
+    config = Config()
+    kafka = KafkaAdapter(config)
+    chat_msg = ChatMsg(content='Hello', reciever='user1', timestamp=datetime.now().isoformat())
+    kafka.publish_msg(chat_msg)
+    kafka.producer.flush()
+
+if __name__ == '__main__':
+    main()

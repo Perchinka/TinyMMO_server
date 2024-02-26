@@ -13,6 +13,6 @@ class Config:
         self.KAFKA_USERNAME = os.environ.get('KAFKA_USERNAME')
         self.KAFKA_PASSWORD = os.environ.get('KAFKA_PASSWORD')
 
-        self.LOGGING_LEVEL = os.environ.get('LOGING_LEVEL')
+        self.LOGGING_LEVEL = os.environ.get('LOGGING_LEVEL', 'INFO')
 
         logger.setup_logger(self.LOGGING_LEVEL)
