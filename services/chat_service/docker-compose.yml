@@ -50,7 +50,7 @@ services:
 
   chat-service:
       build:
-        context: services/chat_service
+        context: .
         dockerfile: Dockerfile
       ports:
         - 5000:5000
