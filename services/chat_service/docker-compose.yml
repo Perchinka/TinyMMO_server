@@ -55,7 +55,8 @@ services:
       ports:
         - 5000:5000
       depends_on:
-        - kafka
+        kafka:
+          condition: service_healthy
       environment:
         - KAFKA_URL=kafka:9092
         - LOGGING_LEVEL=INFO
