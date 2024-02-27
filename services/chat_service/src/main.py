@@ -27,26 +27,40 @@ class KafkaAdapter:
     
     def consume_msg(self):
         self.consumer.subscribe(['rcv'])
-        while True:
-            raw_msg = self.consumer.poll(1.0)
-            if raw_msg is None:
-                continue
-            if raw_msg.error():
-                logging.error('Consumer error: {}'.format(raw_msg.error()))
-                continue
+        raw_msg = self.consumer.poll()
+        if raw_msg is None:
+            return None
+        if raw_msg.error():
+            logging.error('Consumer error: {}'.format(raw_msg.error()))
+            return None
 
-            msg = ChatMsg(chanel_id=int(raw_msg.key().decode('utf-8')), content=raw_msg.value().decode('utf-8'))
-            logging.info('Received message: {}'.format(msg))
-            self.consumer.commit
+        msg = ChatMsg(chanel_id=int(raw_msg.key().decode('utf-8')), content=raw_msg.value().decode('utf-8'))
+        logging.info('Consumer received new message: {}'.format(msg))
+        self.consumer.commit
+        return msg
     
+
+class ChatService:
+    def __init__(self, config: Config):
+        self.kafka = KafkaAdapter(config)
+    
+    def send_msg(self, msg: ChatMsg):
+        self.kafka.publish_msg(msg)
+        self.kafka.producer.flush()
+    
+    def start_polling(self): 
+        while True:
+            msg = self.kafka.consume_msg()
+            if msg is None:
+                continue
+            # TODO Add chanel_id processing and sending message to the proper chat
+            self.send_msg(msg)
+
 
 def main():
     config = Config()
-    kafka = KafkaAdapter(config)
-    chat_msg = ChatMsg(chanel_id=1, content='Hello')
-    kafka.publish_msg(chat_msg)
-    kafka.producer.flush()
-    kafka.consume_msg()
+    chat_service = ChatService(config)
+    chat_service.start_polling()
 
 if __name__ == '__main__':
     main()
