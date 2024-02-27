@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "chat_service"
+version = "0.1.0"
+description = "My little mmo server chat service"
+authors = ["Perchinka <alexsator.lukin@gmail.com>"]
+readme = "README.md"
+packages = [
+    { include = "src"}
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+confluent-kafka = "^2.3.0"
+pydantic = "^2.6.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
