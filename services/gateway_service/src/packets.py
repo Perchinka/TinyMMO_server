@@ -58,6 +58,5 @@ class ChatPacket(Packet):
     
     def __bytes__(self) -> bytes:
         return str(self).encode('utf-8')
-    
-    def __repr__(self) -> str:
-        return f'ChatPacket(to_id={self.to_id}, from_id={self.from_id}, content={self.content})'
+
+ 

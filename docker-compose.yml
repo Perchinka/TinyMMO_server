@@ -50,7 +50,7 @@ services:
 
   chat-service:
       build:
-        context: .
+        context: services/chat_service
         dockerfile: Dockerfile
       ports:
         - 5000:5000
@@ -73,3 +73,18 @@ services:
     depends_on:
       - kafka
 
+
+  gateway-service:
+      build:
+        context: services/gateway_service
+        dockerfile: Dockerfile
+      ports:
+        - 51234:51234
+      depends_on:
+        kafka:
+          condition: service_healthy
+      environment:
+        - KAFKA_URL=kafka:9092
+        - LOGGING_LEVEL=INFO
+
+  
