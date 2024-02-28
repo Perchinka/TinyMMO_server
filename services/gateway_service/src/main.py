@@ -86,31 +86,29 @@ class Worker:
         while True:
             conn, addr = self.server_socket.accept()
 
-            client_host, client_port = addr
-
             try:
-                threading.Thread(target=self.handle_connection, args=(conn, client_host)).start()
-                self.connections_kafka.publish(client_host[0], True)
-                self.mapping_dict[client_host] = conn
+                threading.Thread(target=self.handle_connection, args=(conn, addr)).start()
+                self.connections_kafka.publish(addr[0], True)
+                self.mapping_dict[addr] = conn
             except Exception as e:
                 logging.error('Error handling connection: {}'.format(e))
-                self.connections_kafka.publish(client_host[0], False)
+                self.connections_kafka.publish(addr[0], False)
                 conn.close()
     
-    def handle_connection(self, conn: socket.socket, addr: str):
-        logging.info('Connection enstablished with {}'.format(addr)) 
+    def handle_connection(self, conn: socket.socket, addr: tuple[str, int]):
+        logging.info('Connection enstablished with {}:{}'.format(addr[0], addr[1])) 
         
         while True:
             data = conn.recv(1024)
 
             if not data:
-                self.connections_kafka.publish(addr, False)
+                self.connections_kafka.publish(addr[0], False)
                 del self.mapping_dict[addr]
                 conn.close()
-                logging.info('Connection closed with {}'.format(addr))
+                logging.info('Connection closed with {}:{}'.format(addr[0], addr[1]))
                 break
             
-            logging.info('Received message from {}: {}'.format(addr, data))
+            logging.info('Received message from {}:{} - {}'.format(addr[0],addr[1], data))
 
 
 if __name__ == '__main__':
