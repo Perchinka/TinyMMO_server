@@ -22,9 +22,18 @@ class Packet:
 
     
 def from_json(data: str) -> Packet:
-    deserialized = json.loads(data)
-    packet_type = PacketType(deserialized['a']).name
-    payloads = tuple(deserialized[f'p{i}'] for i in range(len(deserialized) - 1))
+    try:
+        deserialized = json.loads(data)
+    except json.JSONDecodeError as e:
+        logging.error(f'Error deserializing packet: {e}')
+        return None
+    try:
+        packet_type = PacketType(deserialized['a']).name
+        payloads = tuple(deserialized[f'p{i}'] for i in range(len(deserialized) - 1))
+    except KeyError as e:
+        logging.error(f'Packet deserialization error: {e}')
+        return None
+    
 
     class_name = packet_type + 'Packet'
     try:
